@@ -1,3 +1,3 @@
-module booking-app
+module myFirstServer-app
 
 go 1.20

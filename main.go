@@ -40,8 +40,8 @@ func main() {
 	mux.HandleFunc("/", getRoot)
 	mux.HandleFunc("/hello", getHello)
 
-	ctx, cancelCtx := context.WithCancel(context.Background())
-	serverOne := &http.Server{
+	ctx := context.Background()
+	server := &http.Server{
 		Addr:    "127.0.0.1:3333",
 		Handler: mux,
 		BaseContext: func(l net.Listener) context.Context {
@@ -50,34 +50,12 @@ func main() {
 		},
 	}
 
-	serverTwo := &http.Server{
-		Addr:    "127.0.0.1:4444",
-		Handler: mux,
-		BaseContext: func(l net.Listener) context.Context {
-			ctx = context.WithValue(ctx, keyServerAddr, l.Addr().String())
-			return ctx
-		},
+	err := server.ListenAndServe()
+	if errors.Is(err, http.ErrServerClosed) {
+		fmt.Printf("server one closed\n")
+	} else if err != nil {
+		fmt.Printf("error listening for server one: %s\n", err)
 	}
-
-	go func() {
-		err := serverOne.ListenAndServe()
-		if errors.Is(err, http.ErrServerClosed) {
-			fmt.Printf("server one closed\n")
-		} else if err != nil {
-			fmt.Printf("error listening for server one: %s\n", err)
-		}
-		cancelCtx()
-	}()
-
-	go func() {
-		err := serverTwo.ListenAndServe()
-		if errors.Is(err, http.ErrServerClosed) {
-			fmt.Printf("server two closed\n")
-		} else if err != nil {
-			fmt.Printf("error listening for server two: %s\n", err)
-		}
-		cancelCtx()
-	}()
 
 	<-ctx.Done()
 }
