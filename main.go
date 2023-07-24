@@ -1,5 +1,7 @@
 package main
 
+//https://www.digitalocean.com/community/tutorials/how-to-make-an-http-server-in-go
+
 import (
 	"context"
 	"errors"
@@ -40,7 +42,9 @@ func getHello(w http.ResponseWriter, r *http.Request) {
 
 	myName := r.PostFormValue("myName")
 	if myName == "" {
-		myName = "HTTP"
+		w.Header().Set("x-missing-field", "myName")
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	io.WriteString(w, fmt.Sprintf("Hello, %s!\n", myName))
